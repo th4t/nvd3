@@ -17,6 +17,7 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
     , y2Axis = nv.models.axis()
     , legend = nv.models.legend()
     , brushContext = d3.svg.brush()
+    , brushFocus = d3.svg.brush()
     ;
 
   var margin = {top: 30, right: 30, bottom: 30, left: 60}
@@ -31,13 +32,14 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
     , y2
     , showLegend = true
     , brushContextExtent = null
+    , brushFocusExtent = null
     , tooltips = true
     , tooltip = function(key, x, y, e, graph) {
         return '<h3>' + key + '</h3>' +
                '<p>' +  y + ' at ' + x + '</p>'
       }
     , noData = "No Data Available."
-    , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'brushContext')
+    , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'brushContext', 'brushFocus')
     ;
 
   lines
@@ -143,13 +145,15 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
       focusEnter.append('g').attr('class', 'nv-x nv-axis');
       focusEnter.append('g').attr('class', 'nv-y nv-axis');
       focusEnter.append('g').attr('class', 'nv-linesWrap');
+      focusEnter.append('g').attr('class', 'nv-brushBackground nv-brushFocusBackground'); //additional classes to simplify selections
+      focusEnter.append('g').attr('class', 'nv-x nv-brush nv-brushFocus');
 
       var contextEnter = gEnter.append('g').attr('class', 'nv-context');
       contextEnter.append('g').attr('class', 'nv-x nv-axis');
       contextEnter.append('g').attr('class', 'nv-y nv-axis');
       contextEnter.append('g').attr('class', 'nv-linesWrap');
-      contextEnter.append('g').attr('class', 'nv-brushBackground');
-      contextEnter.append('g').attr('class', 'nv-x nv-brush');
+      contextEnter.append('g').attr('class', 'nv-brushBackground nv-brushContextBackground'); //additional classes to simplify selections
+      contextEnter.append('g').attr('class', 'nv-x nv-brush nv-brushContext');
 
       //------------------------------------------------------------
 
@@ -249,7 +253,7 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
 
 
       //------------------------------------------------------------
-      // Setup Brush
+      // Setup Context Brush
 
       brushContext
         .x(x2)
@@ -257,7 +261,7 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
 
       if (brushContextExtent) brushContext.extent(brushContextExtent);
 
-      var brushContextBG = g.select('.nv-brushBackground').selectAll('g')
+      var brushContextBG = g.select('.nv-brushContextBackground').selectAll('g')
           .data([brushContextExtent || brushContext.extent()])
 
       var brushContextBGenter = brushContextBG.enter()
@@ -275,7 +279,7 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
           .attr('y', 0)
           .attr('height', availableHeight2);
 
-      gBrushContext = g.select('.nv-x.nv-brush')
+      gBrushContext = g.select('.nv-x.nv-brush.nv-brushContext')
           .call(brushContext);
       gBrushContext.selectAll('rect')
           //.attr('y', -5)
@@ -283,6 +287,54 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
       gBrushContext.selectAll('.resize').append('path').attr('d', resizePath);
 
       onBrushContext();
+
+      //------------------------------------------------------------
+
+
+      //------------------------------------------------------------
+      // Setup Focus Brush
+
+      brushFocus
+        .x(x2)
+        .on('brush', onBrushFocus);
+
+      if (brushFocusExtent) brushFocus.extent(brushFocusExtent);
+
+      var brushFocusBG = g.select('.nv-brushFocusBackground').selectAll('g')
+          .data([brushFocusExtent || brushFocus.extent()])
+
+      var brushFocusBGenter = brushFocusBG.enter()
+          .append('g');
+
+      /*
+      brushFocusBGenter.append('rect')
+          .attr('class', 'selection')
+          .attr('x', 0)
+          .attr('y', 0)
+          .attr('height', availableHeight1);
+      */
+
+      //TODO
+      brushFocusBGenter.append('rect')
+          .attr('class', 'left')
+          .attr('x', 0)
+          .attr('y', 0)
+          .attr('height', availableHeight1);
+
+      brushFocusBGenter.append('rect')
+          .attr('class', 'right')
+          .attr('x', 0)
+          .attr('y', 0)
+          .attr('height', availableHeight1);
+
+      gBrushFocus = g.select('.nv-x.nv-brushFocus')
+          .call(brushFocus);
+      gBrushFocus.selectAll('rect')
+          //.attr('y', -5)
+          .attr('height', availableHeight1);
+      gBrushFocus.selectAll('.resize').append('path').attr('d', resizePath);
+
+      onBrushFocus();
 
       //------------------------------------------------------------
 
@@ -377,7 +429,6 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
             });
       }
 
-
       function onBrushContext() {
         brushContextExtent = brushContext.empty() ? null : brushContext.extent();
         extent = brushContext.empty() ? x2.domain() : brushContext.extent();
@@ -387,6 +438,57 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
 
 
         updateBrushContextBG();
+
+        // Update Main (Focus)
+        var focusLinesWrap = g.select('.nv-focus .nv-linesWrap')
+            .datum(
+              data
+                .filter(function(d) { return !d.disabled })
+                .map(function(d,i) {
+                  return {
+                    key: d.key,
+                    values: d.values.filter(function(d,i) {
+                      return lines.x()(d,i) >= extent[0] && lines.x()(d,i) <= extent[1];
+                    })
+                  }
+                })
+            );
+        d3.transition(focusLinesWrap).call(lines);
+
+
+        // Update Main (Focus) Axes
+        d3.transition(g.select('.nv-focus .nv-x.nv-axis'))
+            .call(xAxis);
+        d3.transition(g.select('.nv-focus .nv-y.nv-axis'))
+            .call(yAxis);
+      }
+
+      //TODO
+      function updateBrushFocusBG() {
+        if (!brushFocus.empty()) brushFocus.extent(brushFocusExtent);
+        brushFocusBG
+            .data([brushFocus.empty() ? x2.domain() : brushFocusExtent])
+            .each(function(d,i) {
+              var leftWidth = x2(d[0]) - x.range()[0],
+                  rightWidth = x.range()[1] - x2(d[1]);
+              d3.select(this).select('.left')
+                .attr('width',  leftWidth < 0 ? 0 : leftWidth);
+
+              d3.select(this).select('.right')
+                .attr('x', x2(d[1]))
+                .attr('width', rightWidth < 0 ? 0 : rightWidth);
+            });
+      }
+
+      //TODO
+      function onBrushFocus() {
+        brushFocusExtent = brushFocus.empty() ? null : brushFocus.extent();
+        extent = brushFocus.empty() ? x2.domain() : brushFocus.extent();
+
+
+        dispatch.brushFocus({extent: extent, brush: brushFocus});
+
+        updateBrushFocusBG();
 
         // Update Main (Focus)
         var focusLinesWrap = g.select('.nv-focus .nv-linesWrap')
