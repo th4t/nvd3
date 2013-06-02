@@ -1,9 +1,13 @@
 
+//derived from lineWithFocusChart.js
 nv.models.flexibleWithSelectionWithFocusChart = function() {
 
   //============================================================
   // Public Variables with Default Settings
   //------------------------------------------------------------
+
+  //focus is the first part of the graph
+  //context the lower, smaller
 
   var lines = nv.models.line()
     , lines2 = nv.models.line()
@@ -12,7 +16,7 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
     , x2Axis = nv.models.axis()
     , y2Axis = nv.models.axis()
     , legend = nv.models.legend()
-    , brush = d3.svg.brush()
+    , brushContext = d3.svg.brush()
     ;
 
   var margin = {top: 30, right: 30, bottom: 30, left: 60}
@@ -26,14 +30,14 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
     , x2
     , y2
     , showLegend = true
-    , brushExtent = null
+    , brushContextExtent = null
     , tooltips = true
     , tooltip = function(key, x, y, e, graph) {
         return '<h3>' + key + '</h3>' +
                '<p>' +  y + ' at ' + x + '</p>'
       }
     , noData = "No Data Available."
-    , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'brush')
+    , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'brushContext')
     ;
 
   lines
@@ -247,38 +251,38 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
       //------------------------------------------------------------
       // Setup Brush
 
-      brush
+      brushContext
         .x(x2)
-        .on('brush', onBrush);
+        .on('brush', onBrushContext);
 
-      if (brushExtent) brush.extent(brushExtent);
+      if (brushContextExtent) brushContext.extent(brushContextExtent);
 
-      var brushBG = g.select('.nv-brushBackground').selectAll('g')
-          .data([brushExtent || brush.extent()])
+      var brushContextBG = g.select('.nv-brushBackground').selectAll('g')
+          .data([brushContextExtent || brushContext.extent()])
 
-      var brushBGenter = brushBG.enter()
+      var brushContextBGenter = brushContextBG.enter()
           .append('g');
 
-      brushBGenter.append('rect')
+      brushContextBGenter.append('rect')
           .attr('class', 'left')
           .attr('x', 0)
           .attr('y', 0)
           .attr('height', availableHeight2);
 
-      brushBGenter.append('rect')
+      brushContextBGenter.append('rect')
           .attr('class', 'right')
           .attr('x', 0)
           .attr('y', 0)
           .attr('height', availableHeight2);
 
-      gBrush = g.select('.nv-x.nv-brush')
-          .call(brush);
-      gBrush.selectAll('rect')
+      gBrushContext = g.select('.nv-x.nv-brush')
+          .call(brushContext);
+      gBrushContext.selectAll('rect')
           //.attr('y', -5)
           .attr('height', availableHeight2);
-      gBrush.selectAll('.resize').append('path').attr('d', resizePath);
+      gBrushContext.selectAll('.resize').append('path').attr('d', resizePath);
 
-      onBrush();
+      onBrushContext();
 
       //------------------------------------------------------------
 
@@ -357,10 +361,10 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
       }
 
 
-      function updateBrushBG() {
-        if (!brush.empty()) brush.extent(brushExtent);
-        brushBG
-            .data([brush.empty() ? x2.domain() : brushExtent])
+      function updateBrushContextBG() {
+        if (!brushContext.empty()) brushContext.extent(brushContextExtent);
+        brushContextBG
+            .data([brushContext.empty() ? x2.domain() : brushContextExtent])
             .each(function(d,i) {
               var leftWidth = x2(d[0]) - x.range()[0],
                   rightWidth = x.range()[1] - x2(d[1]);
@@ -374,15 +378,15 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
       }
 
 
-      function onBrush() {
-        brushExtent = brush.empty() ? null : brush.extent();
-        extent = brush.empty() ? x2.domain() : brush.extent();
+      function onBrushContext() {
+        brushContextExtent = brushContext.empty() ? null : brushContext.extent();
+        extent = brushContext.empty() ? x2.domain() : brushContext.extent();
 
 
-        dispatch.brush({extent: extent, brush: brush});
+        dispatch.brushContext({extent: extent, brush: brushContext});
 
 
-        updateBrushBG();
+        updateBrushContextBG();
 
         // Update Main (Focus)
         var focusLinesWrap = g.select('.nv-focus .nv-linesWrap')
