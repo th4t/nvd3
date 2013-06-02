@@ -38,7 +38,7 @@ JS_FILES = \
 JS_COMPILER = \
 	uglifyjs
 
-all: nv.d3.js nv.d3.min.js
+all: nv.d3.js nv.d3.min.js copy
 nv.d3.js: $(JS_FILES)
 nv.d3.min.js: $(JS_FILES)
 
@@ -50,7 +50,12 @@ nv.d3.js: Makefile
 	rm -f $@
 	cat $(filter %.js,$^) | $(JS_COMPILER) >> $@
 
+COPY_PATH = ~/Uni/Master/code/dotaAnnotator/dotaannotator/static/js/dep/
+
+copy:
+	cp nv.d3.js $(COPY_PATH)
+
 clean:
 	rm -rf nv.d3.js nv.d3.min.js
 
-
+.PHONY: copy
