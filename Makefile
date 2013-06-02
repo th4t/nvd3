@@ -51,10 +51,12 @@ nv.d3.js: Makefile
 	rm -f $@
 	cat $(filter %.js,$^) | $(JS_COMPILER) >> $@
 
-COPY_PATH = ~/Uni/Master/code/dotaAnnotator/dotaannotator/static/js/dep/
+COPY_PATH_JS = ~/Uni/Master/code/dotaAnnotator/dotaannotator/static/js/dep/
+COPY_PATH_CSS = ~/Uni/Master/code/dotaAnnotator/dotaannotator/static/css/
 
 copy:
-	cp nv.d3.js $(COPY_PATH)
+	cp nv.d3.js $(COPY_PATH_JS)
+	cp src/nv.d3.css $(COPY_PATH_CSS)
 
 clean:
 	rm -rf nv.d3.js nv.d3.min.js
