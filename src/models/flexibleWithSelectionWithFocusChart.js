@@ -145,7 +145,6 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
       focusEnter.append('g').attr('class', 'nv-x nv-axis');
       focusEnter.append('g').attr('class', 'nv-y nv-axis');
       focusEnter.append('g').attr('class', 'nv-linesWrap');
-      focusEnter.append('g').attr('class', 'nv-brushBackground nv-brushFocusBackground'); //additional classes to simplify selections
       focusEnter.append('g').attr('class', 'nv-x nv-brush nv-brushFocus');
 
       var contextEnter = gEnter.append('g').attr('class', 'nv-context');
@@ -279,7 +278,7 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
           .attr('y', 0)
           .attr('height', availableHeight2);
 
-      gBrushContext = g.select('.nv-x.nv-brush.nv-brushContext')
+      gBrushContext = g.select('.nv-brushContext')
           .call(brushContext);
       gBrushContext.selectAll('rect')
           //.attr('y', -5)
@@ -300,34 +299,7 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
 
       if (brushFocusExtent) brushFocus.extent(brushFocusExtent);
 
-      var brushFocusBG = g.select('.nv-brushFocusBackground').selectAll('g')
-          .data([brushFocusExtent || brushFocus.extent()])
-
-      var brushFocusBGenter = brushFocusBG.enter()
-          .append('g');
-
-      /*
-      brushFocusBGenter.append('rect')
-          .attr('class', 'selection')
-          .attr('x', 0)
-          .attr('y', 0)
-          .attr('height', availableHeight1);
-      */
-
-      //TODO
-      brushFocusBGenter.append('rect')
-          .attr('class', 'left')
-          .attr('x', 0)
-          .attr('y', 0)
-          .attr('height', availableHeight1);
-
-      brushFocusBGenter.append('rect')
-          .attr('class', 'right')
-          .attr('x', 0)
-          .attr('y', 0)
-          .attr('height', availableHeight1);
-
-      gBrushFocus = g.select('.nv-x.nv-brushFocus')
+      gBrushFocus = g.select('.nv-brushFocus')
           .call(brushFocus);
       gBrushFocus.selectAll('rect')
           //.attr('y', -5)
@@ -464,33 +436,16 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
       }
 
       //TODO
-      function updateBrushFocusBG() {
-        if (!brushFocus.empty()) brushFocus.extent(brushFocusExtent);
-        brushFocusBG
-            .data([brushFocus.empty() ? x2.domain() : brushFocusExtent])
-            .each(function(d,i) {
-              var leftWidth = x2(d[0]) - x.range()[0],
-                  rightWidth = x.range()[1] - x2(d[1]);
-              d3.select(this).select('.left')
-                .attr('width',  leftWidth < 0 ? 0 : leftWidth);
-
-              d3.select(this).select('.right')
-                .attr('x', x2(d[1]))
-                .attr('width', rightWidth < 0 ? 0 : rightWidth);
-            });
-      }
-
-      //TODO
       function onBrushFocus() {
         brushFocusExtent = brushFocus.empty() ? null : brushFocus.extent();
         extent = brushFocus.empty() ? x2.domain() : brushFocus.extent();
 
-
         dispatch.brushFocus({extent: extent, brush: brushFocus});
 
-        updateBrushFocusBG();
+        //updateBrushFocusBG();
 
         // Update Main (Focus)
+        /*
         var focusLinesWrap = g.select('.nv-focus .nv-linesWrap')
             .datum(
               data
@@ -512,6 +467,7 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
             .call(xAxis);
         d3.transition(g.select('.nv-focus .nv-y.nv-axis'))
             .call(yAxis);
+        */
       }
 
       //============================================================

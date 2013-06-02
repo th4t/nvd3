@@ -617,6 +617,14 @@ svg .title {
   fill-opacity: 0 !important;
 }
 
+/*
+* custom selection style of the focus brush (selection area)
+*/
+.nvd3 .nv-brushFocus .extent {
+  fill-opacity: 0.1 !important;
+  fill: #00F;
+}
+
 .nvd3 .nv-brushBackground rect {
   stroke: #000;
   stroke-width: .4;
