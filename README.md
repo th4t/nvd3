@@ -21,15 +21,15 @@ Upgrade to d3.v3 in progress!
 
 # Installation Instructions
 
-d3.v2.js is a dependency of nv.d3.js. Be sure to include in in your project, then:  
-Add a script tag to include nv.d3.js OR nv.d3.min.js in your project.  
+d3.v2.js is a dependency of nv.d3.js. Be sure to include in in your project, then:
+Add a script tag to include nv.d3.js OR nv.d3.min.js in your project.
 Also add a link to the nv.d3.css file.
 
-Python & Django-wrapped versions available:  
-https://github.com/areski/python-nvd3  
-https://github.com/areski/django-nvd3  
+Python & Django-wrapped versions available:
+https://github.com/areski/python-nvd3
+https://github.com/areski/django-nvd3
 
-R package version available:  
+R package version available:
 http://ramnathv.github.io/rCharts/r2js/
 
 ---
@@ -56,7 +56,7 @@ fork's root directory will rebuild both `nv.d3.js` and `nv.d3.min.js`.
 
 Without UglifyJS, you won't get the minified version when running make.
 
-**We ask that you DO NOT minify pull requests... 
+**We ask that you DO NOT minify pull requests...
 If you need to minify please build pull request in separate branch, and
 merge and minify in your master.
 
