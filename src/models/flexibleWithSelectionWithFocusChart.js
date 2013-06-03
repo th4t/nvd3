@@ -8,7 +8,6 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
 
   //focus is the first part of the graph
   //context the lower, smaller
-
   var lines = nv.models.line()
     , lines2 = nv.models.line()
     , xAxis = nv.models.axis()
@@ -18,6 +17,7 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
     , legend = nv.models.legend()
     , brushContext = d3.svg.brush()
     , brushFocus = d3.svg.brush()
+    , selectionFocus = {start: 0, end: 0};
     ;
 
   var margin = {top: 30, right: 30, bottom: 30, left: 60}
@@ -33,7 +33,8 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
     , showLegend = true
     , brushContextExtent = null
     , brushFocusExtent = null
-    , tooltips = true
+    //no tooltips for now
+    , tooltips = false
     , tooltip = function(key, x, y, e, graph) {
         return '<h3>' + key + '</h3>' +
                '<p>' +  y + ' at ' + x + '</p>'
@@ -101,6 +102,7 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
       // Display No Data message if there's nothing to show.
 
       if (!data || !data.length || !data.filter(function(d) { return d.values.length }).length) {
+        //TODO: set graph data to zeros?
         var noDataText = container.selectAll('.nv-noData').data([noData]);
 
         noDataText.enter().append('text')
@@ -294,7 +296,7 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
       // Setup Focus Brush
 
       brushFocus
-        .x(x2)
+        .x(x)
         .on('brush', onBrushFocus);
 
       if (brushFocusExtent) brushFocus.extent(brushFocusExtent);
@@ -433,41 +435,25 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
             .call(xAxis);
         d3.transition(g.select('.nv-focus .nv-y.nv-axis'))
             .call(yAxis);
+
+        //update focus selection
+        onBrushFocus();
       }
 
-      //TODO
       function onBrushFocus() {
         brushFocusExtent = brushFocus.empty() ? null : brushFocus.extent();
-        extent = brushFocus.empty() ? x2.domain() : brushFocus.extent();
+        extent = brushFocus.empty() ? x.domain() : brushFocus.extent();
 
         dispatch.brushFocus({extent: extent, brush: brushFocus});
 
-        //updateBrushFocusBG();
-
-        // Update Main (Focus)
-        /*
-        var focusLinesWrap = g.select('.nv-focus .nv-linesWrap')
-            .datum(
-              data
-                .filter(function(d) { return !d.disabled })
-                .map(function(d,i) {
-                  return {
-                    key: d.key,
-                    values: d.values.filter(function(d,i) {
-                      return lines.x()(d,i) >= extent[0] && lines.x()(d,i) <= extent[1];
-                    })
-                  }
-                })
-            );
-        d3.transition(focusLinesWrap).call(lines);
-
-
-        // Update Main (Focus) Axes
-        d3.transition(g.select('.nv-focus .nv-x.nv-axis'))
-            .call(xAxis);
-        d3.transition(g.select('.nv-focus .nv-y.nv-axis'))
-            .call(yAxis);
-        */
+        if (extent == null) {
+            selectionFocus.start = 0;
+            selectionFocus.end = 0;
+        } else {
+            selectionFocus.start = extent[0];
+            selectionFocus.end = extent[1];
+        }
+        chart.selectionCallback(selectionFocus.start,selectionFocus.end);
       }
 
       //============================================================
@@ -514,6 +500,9 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
   chart.y2Axis = y2Axis;
 
   d3.rebind(chart, lines, 'defined', 'isArea', 'size', 'xDomain', 'yDomain', 'forceX', 'forceY', 'interactive', 'clipEdge', 'clipVoronoi', 'id');
+
+  // a function which is called with start and end time values (in seconds, according to the x axis)
+  chart.selectionCallback = function(start,end) {}; //triggered when the selection changes
 
   chart.x = function(_) {
     if (!arguments.length) return lines.x;
