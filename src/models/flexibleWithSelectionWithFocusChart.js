@@ -102,7 +102,6 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
       // Display No Data message if there's nothing to show.
 
       if (!data || !data.length || !data.filter(function(d) { return d.values.length }).length) {
-        //TODO: set graph data to zeros?
         var noDataText = container.selectAll('.nv-noData').data([noData]);
 
         noDataText.enter().append('text')
@@ -446,6 +445,7 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
 
         dispatch.brushFocus({extent: extent, brush: brushFocus});
 
+        //TODO why is this TODO here?
         if (extent == null) {
             selectionFocus.start = 0;
             selectionFocus.end = 0;
