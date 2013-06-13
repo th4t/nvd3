@@ -18,6 +18,7 @@ JS_FILES = \
 	src/models/linePlusBarChart.js \
 	src/models/lineWithFocusChart.js \
 	src/models/flexibleWithSelectionWithFocusChart.js \
+	src/models/flexibleAreaWithSelectionWithFocusChart.js \
 	src/models/linePlusBarWithFocusChart.js \
 	src/models/multiBar.js \
 	src/models/multiBarChart.js \
@@ -61,4 +62,4 @@ copy:
 clean:
 	rm -rf nv.d3.js nv.d3.min.js
 
-.PHONY: copy
+.PHONY: all copy
