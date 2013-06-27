@@ -6017,9 +6017,8 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
 
   //focus is the first part of the graph
   //context the lower, smaller
-  //var lines = nv.models.line()
   var stacked = nv.models.stackedArea()
-    , lines2 = nv.models.line()
+    , stacked2 = nv.models.stackedArea()
     , xAxis = nv.models.axis()
     , yAxis = nv.models.axis()
     , x2Axis = nv.models.axis()
@@ -6044,7 +6043,7 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
     , brushContextExtent = null
     , brushFocusExtent = null
     //no tooltips for now
-    , tooltips = false
+    , tooltips = true
     , tooltip = function(key, x, y, e, graph) {
         return '<h3>' + key + '</h3>' +
                '<p>' +  y + ' at ' + x + '</p>'
@@ -6053,19 +6052,21 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
     , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'brushContext', 'brushFocus')
     ;
 
-  //TODO
-  //lines
-  //  .clipEdge(true)
-  //  ;
+  //TODO what is this?
   stacked.scatter
+    .interactive(false)
     .pointActive(function(d) {
-      return !!Math.round(stacked.y()(d) * 100);
+      return false
+      //return !!Math.round(stacked.y()(d) * 100);
     });
-  stacked.style('expand');
+  stacked.style('zero');
+  //TODO: remove strange dots, which are shown with the zero style
 
-  lines2
+  stacked2
     .interactive(false)
     ;
+  stacked2.style('expand');
+
   xAxis
     .orient('bottom')
     .tickPadding(5)
@@ -6109,11 +6110,16 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
                              - margin.left - margin.right,
           availableHeight1 = (height || parseInt(container.style('height')) || 400)
                              - margin.top - margin.bottom - height2,
+
           availableHeight2 = height2 - margin2.top - margin2.bottom;
+
+      if (availableWidth <= 0 || availableHeight1 <= 0 || availableHeight2 <= 0) {
+        //if the sizes are fubared, just stop right here
+        return;
+      }
 
       chart.update = function() { chart(selection) };
       chart.container = this;
-
 
       //------------------------------------------------------------
       // Display No Data message if there's nothing to show.
@@ -6142,12 +6148,10 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
       //------------------------------------------------------------
       // Setup Scales
 
-      //x = lines.xScale();
-      //y = lines.yScale();
       x = stacked.xScale();
       y = stacked.yScale();
-      x2 = lines2.xScale();
-      y2 = lines2.yScale();
+      x2 = stacked2.xScale();
+      y2 = stacked2.yScale();
 
       //------------------------------------------------------------
 
@@ -6155,8 +6159,8 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
       //------------------------------------------------------------
       // Setup containers and skeleton of chart
 
-      var wrap = container.selectAll('g.nv-wrap.nv-lineWithFocusChart').data([data]);
-      var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap nv-lineWithFocusChart').append('g');
+      var wrap = container.selectAll('g.nv-wrap').data([data]);
+      var gEnter = wrap.enter().append('g').attr('class', 'nvd3 nv-wrap').append('g');
       var g = wrap.select('g');
 
       gEnter.append('g').attr('class', 'nv-legendWrap');
@@ -6164,14 +6168,13 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
       var focusEnter = gEnter.append('g').attr('class', 'nv-focus');
       focusEnter.append('g').attr('class', 'nv-x nv-axis');
       focusEnter.append('g').attr('class', 'nv-y nv-axis');
-      //focusEnter.append('g').attr('class', 'nv-linesWrap');
       focusEnter.append('g').attr('class', 'nv-stackedWrap');
       focusEnter.append('g').attr('class', 'nv-x nv-brush nv-brushFocus');
 
       var contextEnter = gEnter.append('g').attr('class', 'nv-context');
       contextEnter.append('g').attr('class', 'nv-x nv-axis');
       contextEnter.append('g').attr('class', 'nv-y nv-axis');
-      contextEnter.append('g').attr('class', 'nv-linesWrap');
+      contextEnter.append('g').attr('class', 'nv-stackedWrap');
       contextEnter.append('g').attr('class', 'nv-brushBackground nv-brushContextBackground'); //additional classes to simplify selections
       contextEnter.append('g').attr('class', 'nv-x nv-brush nv-brushContext');
 
@@ -6207,22 +6210,17 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
       //------------------------------------------------------------
       // Main Chart Component(s)
 
-      //lines
-      //  .width(availableWidth)
-      //  .height(availableHeight1)
-      //  .color(
-      //    data
-      //      .map(function(d,i) {
-      //        return d.color || color(d, i);
-      //      })
-      //      .filter(function(d,i) {
-      //        return !data[i].disabled;
-      //    })
-      //  );
-      //
       stacked
-        .width(availableWidth)
-        .height(availableHeight1)
+        .color(
+          data
+            .map(function(d,i) {
+              return d.color || color(d, i);
+            })
+            .filter(function(d,i) {
+              return !data[i].disabled;
+          })
+        );
+      stacked2
         .color(
           data
             .map(function(d,i) {
@@ -6233,27 +6231,22 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
           })
         );
 
-      lines2
+      stacked
+        .width(availableWidth)
+        .height(availableHeight1)
+
+      stacked2
         //.defined(stacked.defined())
         .width(availableWidth)
         .height(availableHeight2)
-        .color(
-          data
-            .map(function(d,i) {
-              return d.color || color(d, i);
-            })
-            .filter(function(d,i) {
-              return !data[i].disabled;
-          })
-        );
 
       g.select('.nv-context')
           .attr('transform', 'translate(0,' + ( availableHeight1 + margin.bottom + margin2.top) + ')')
 
-      var contextLinesWrap = g.select('.nv-context .nv-linesWrap')
+      var contextStackedWrap = g.select('.nv-context .nv-stackedWrap')
           .datum(data.filter(function(d) { return !d.disabled }))
 
-      d3.transition(contextLinesWrap).call(lines2);
+      d3.transition(contextStackedWrap).call(stacked2);
 
       //------------------------------------------------------------
       // Setup Main (Focus) Axes
@@ -6428,27 +6421,11 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
         brushContextExtent = brushContext.empty() ? null : brushContext.extent();
         extent = brushContext.empty() ? x2.domain() : brushContext.extent();
 
-
         dispatch.brushContext({extent: extent, brush: brushContext});
-
 
         updateBrushContextBG();
 
         // Update Main (Focus)
-        //var focusLinesWrap = g.select('.nv-focus .nv-linesWrap')
-        //    .datum(
-        //      data
-        //        .filter(function(d) { return !d.disabled })
-        //        .map(function(d,i) {
-        //          return {
-        //            key: d.key,
-        //            values: d.values.filter(function(d,i) {
-        //              return lines.x()(d,i) >= extent[0] && lines.x()(d,i) <= extent[1];
-        //            })
-        //          }
-        //        })
-        //    );
-        //d3.transition(focusLinesWrap).call(lines);
         var focusStackedWrap = g.select('.nv-stackedWrap')
             .datum(
               data
@@ -6462,8 +6439,6 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
                 }
               })
          );
-
-        //d3.transition(stackedWrap).call(stacked);
         focusStackedWrap.call(stacked);
 
 
@@ -6534,7 +6509,7 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
   chart.dispatch = dispatch;
   chart.legend = legend;
   chart.stacked = stacked;
-  chart.lines2 = lines2;
+  chart.stacked2 = stacked2;
   chart.xAxis = xAxis;
   chart.yAxis = yAxis;
   chart.x2Axis = x2Axis;
@@ -6548,14 +6523,14 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
   chart.x = function(_) {
     if (!arguments.length) return stacked.x;
     stacked.x(_);
-    lines2.x(_);
+    stacked2.x(_);
     return chart;
   };
 
   chart.y = function(_) {
     if (!arguments.length) return stacked.y;
     stacked.y(_);
-    lines2.y(_);
+    stacked2.y(_);
     return chart;
   };
 
@@ -6620,7 +6595,7 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
   chart.interpolate = function(_) {
     if (!arguments.length) return stacked.interpolate();
     stacked.interpolate(_);
-    lines2.interpolate(_);
+    stacked2.interpolate(_);
     return chart;
   };
 
@@ -6646,7 +6621,6 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
   };
 
   //============================================================
-
 
   return chart;
 }
