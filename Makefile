@@ -19,6 +19,8 @@ JS_FILES = \
 	src/models/lineWithFocusChart.js \
 	src/models/flexibleWithSelectionWithFocusChart.js \
 	src/models/flexibleAreaWithSelectionWithFocusChart.js \
+	src/models/flexibleRangesWithSelectionWithFocusChart.js \
+	src/models/ranges.js \
 	src/models/linePlusBarWithFocusChart.js \
 	src/models/multiBar.js \
 	src/models/multiBarChart.js \
@@ -52,8 +54,8 @@ nv.d3.js: Makefile
 	rm -f $@
 	cat $(filter %.js,$^) | $(JS_COMPILER) >> $@
 
-COPY_PATH_JS = ~/Uni/Master/code/dotaAnnotator/dotaannotator/static/js/dep/
-COPY_PATH_CSS = ~/Uni/Master/code/dotaAnnotator/dotaannotator/static/css/
+COPY_PATH_JS = ~/Uni/Master/code/web/dotaAnnotator/dotaannotator/static/js/dep/
+COPY_PATH_CSS = ~/Uni/Master/code/web/dotaAnnotator/dotaannotator/static/css/
 
 copy:
 	cp nv.d3.js $(COPY_PATH_JS)
