@@ -6007,6 +6007,17 @@ nv.models.flexibleWithSelectionWithFocusChart = function() {
 
   return chart;
 }
+// clones a javascript object, source: http://stackoverflow.com/questions/122102/most-efficient-way-to-clone-an-object
+function clone(obj){
+    if(obj == null || typeof(obj) != 'object')
+        return obj;
+
+    var temp = obj.constructor(); // changed
+
+    for(var key in obj)
+        temp[key] = clone(obj[key]);
+    return temp;
+}
 
 //derived from lineWithFocusChart.js
 nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
@@ -6052,7 +6063,6 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
     , dispatch = d3.dispatch('tooltipShow', 'tooltipHide', 'brushContext', 'brushFocus')
     ;
 
-  //TODO what is this?
   stacked.scatter
     .interactive(false)
     .pointActive(function(d) {
@@ -6060,7 +6070,6 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
       //return !!Math.round(stacked.y()(d) * 100);
     });
   stacked.style('zero');
-  //TODO: remove strange dots, which are shown with the zero style
 
   stacked2
     .interactive(false)
@@ -6427,56 +6436,74 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
         updateBrushContextBG();
 
         // Update Main (Focus)
+        // creates new points at the borders of the selection, so it feels smoother
         var focusStackedWrap = g.select('.nv-stackedWrap')
             .datum(
               data
               .filter(function(d) { return !d.disabled })
               .map(function(d,i) {
-                /*
                 var newValues = []
 
-                var lastY = 0;
+                var lastId = 0;
                 var firstSetFlag = false //whether the first data point is set
                 for (i in d.values) {
                     var xVal = stacked.x()(d.values[i],i);
 
-                    // get the point closest to the left selection boundary
+                    // keep track of closest point to left boundary for an eventual fake-first point
                     if (xVal < extent[0]) {
-                        lastY = d.values[i].y
+                        lastId = i
                     }
-
                     // add first (fake) point for new selection
                     if (!firstSetFlag && xVal > extent[0]) {
-                        console.log(d.values[i])
                         firstSetFlag = true;
-                        newValues.push({x: extent[0], y: lastY})
+
+                        var n = clone(d.values[lastId])
+                        n.x = extent[0]
+                        newValues.push(n)
                     }
 
                     // the points after the right selection boundary, we don't care for those
                     if (xVal > extent[1]) {
                         var id = (i == 0) ? 0 : i-1
-                        newValues.push({x: extent[1], y: d.values[id].y})
+
+                        var n = clone(d.values[id])
+                        n.x = extent[1]
+
+                        newValues.push(n)
                         break
                     }
 
-                    if (xVal >= extent[0] && xVal <= extent[1]) {
-                        newValues.push(d.values[id])
+                    // internal points
+                    if (xVal > extent[0] && xVal < extent[1]) {
+                        newValues.push(clone(d.values[i]))
+                    }
+
+                    // cases for clean border points
+                    if (xVal == extent[1]) {
+                        newValues.push(clone(d.values[i]))
+                        break
+                    }
+
+                    if (xVal == extent[0]) {
+                        firstSetFlag = true;
+                        newValues.push(clone(d.values[i]))
                     }
                 }
 
                 return {
                   key: d.key,
-                  values: //newValues
-                  [{x:extent[0], y:0},{x:extent[1], y:5}]
+                  values: newValues
+                  //[{x:extent[0], y:0},{x:extent[1], y:0}]
                 }
-                */
 
+                /*
                 return {
                   key: d.key,
                   values: d.values.filter(function(d,i) {
                     return stacked.x()(d,i) >= extent[0] && stacked.x()(d,i) <= extent[1];
                   })
                 }
+                */
               })
          );
         focusStackedWrap.call(stacked);
@@ -6498,7 +6525,6 @@ nv.models.flexibleAreaWithSelectionWithFocusChart = function() {
 
         dispatch.brushFocus({extent: extent, brush: brushFocus});
 
-        //TODO why is this TODO here?
         if (extent == null) {
             selectionFocus.start = 0;
             selectionFocus.end = 0;
